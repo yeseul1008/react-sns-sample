@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import { Link } from 'react-router-dom';
+
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Link, useNavigate } from 'react-router-dom';
 
 const joinTheme = createTheme({
   components: {
@@ -21,8 +22,9 @@ const joinTheme = createTheme({
 });
 
 
-function Join() {
+function Login() {
   const [isIdChecked, setIsIdChecked] = useState(false)
+  let navigate = useNavigate();
   let userId = useRef();
   let pwd = useRef();
 
@@ -53,7 +55,7 @@ function Join() {
               Login
             </Typography>
             <Box display="flex" alignItems="center" width="100%" gap={1}>
-              <TextField inputRef={userId} label="Userid" variant="outlined" margin="normal" fullWidth disabled={isIdChecked} />
+              <TextField inputRef={userId} label="Id" variant="outlined" margin="normal" fullWidth disabled={isIdChecked} />
 
             </Box>
             {/* <TextField inputRef={userId} label="Userid" variant="outlined" margin="normal" fullWidth /> */}
@@ -63,6 +65,29 @@ function Join() {
 
             <Button
               fullWidth
+              onClick={() => {
+                let param = {
+                  userId: userId.current.value,
+                  pwd: pwd.current.value
+                };
+
+                fetch("http://localhost:3010/user/login", {
+                  method: "POST",
+                  headers: {
+                    "Content-type": "application/json"
+                  },
+                  body: JSON.stringify(param)
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    console.log(data);
+                    alert(data.msg);
+                    if (data.result) {
+                      localStorage.setItem("token", data.token);
+                      navigate("/feed");
+                    }
+                  });
+              }}
               sx={{
                 mt: 2,
                 backgroundColor: 'transparent',
@@ -88,6 +113,11 @@ function Join() {
             <Typography variant="body2" sx={{ mt: 1 }}>
               SongNS가 처음이신가요? <Link to="/join">회원가입</Link>
             </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              <Link to="/findId" style={{ color: "#7abe36ff" }}>아이디 찾기</Link> | <Link to="/findPwd" style={{ color: "#7abe36ff" }}>비밀번호 찾기</Link>
+            </Typography>
+
+
           </Box>
         </Container>
       </Box>
@@ -95,4 +125,4 @@ function Join() {
   );
 }
 
-export default Join;
+export default Login;

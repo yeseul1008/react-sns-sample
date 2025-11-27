@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import { Link } from 'react-router-dom';
+
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Link, useNavigate } from 'react-router-dom';
 
 const joinTheme = createTheme({
   components: {
@@ -23,6 +24,7 @@ const joinTheme = createTheme({
 
 function Join() {
   const [isIdChecked, setIsIdChecked] = useState(false)
+  let navigate = useNavigate();
   let userId = useRef();
   let pwd = useRef();
   let pwdCheck = useRef();
@@ -182,6 +184,7 @@ function Join() {
                   .then(data => {
                     console.log(data);
                     alert(data.msg);
+                    navigate("/Login");
                   })
 
               }}

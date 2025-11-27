@@ -1,169 +1,386 @@
-import React, { useState } from 'react';
-import {
-  Grid2,
-  AppBar,
-  Toolbar,
-  Typography,
-  Container,
-  Box,
-  Card,
-  CardMedia,
-  CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  DialogActions,
-  Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import React, { useState, useEffect } from "react";
+import { Box, IconButton, Typography, Card, Button } from "@mui/material";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
-const mockFeeds = [
-  {
-    id: 1,
-    title: '게시물 1',
-    description: '이것은 게시물 1의 설명입니다.',
-    image: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-  },
-  {
-    id: 2,
-    title: '게시물 2',
-    description: '이것은 게시물 2의 설명입니다.',
-    image: 'https://images.unsplash.com/photo-1521747116042-5a810fda9664',
-  },
-  // 추가 피드 데이터
-];
 
-function Feed() {
-  const [open, setOpen] = useState(false);
-  const [selectedFeed, setSelectedFeed] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
+export default function MusicCard() {
+  const [post, setPost] = useState(null);
+  const [postId, setPostId] = useState(null);// 현재 포스트 아이디 저장
+  const [otheruserId, setUserId] = useState(null);// 현재 포스트의 유저 아이디 저장
+  const [liked, setLiked] = useState(false); // 좋아요 여부
+  const navigate = useNavigate();
 
-  const handleClickOpen = (feed) => {
-    setSelectedFeed(feed);
-    setOpen(true);
-    setComments([
-      { id: 'user1', text: '멋진 사진이에요!' },
-      { id: 'user2', text: '이 장소에 가보고 싶네요!' },
-      { id: 'user3', text: '아름다운 풍경이네요!' },
-    ]); // 샘플 댓글 추가
-    setNewComment(''); // 댓글 입력 초기화
+  const goToFeedDetail = () => {
+    navigate("/feedDetail", { state: { postId: postId } });
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedFeed(null);
-    setComments([]); // 모달 닫을 때 댓글 초기화
+  const goToOtherUser = () => {
+    navigate("/otherUser", { state: { userId: otheruserId } });
+  };
+  const formatDate = (dateString) => {
+    if (!dateString) return "...";
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const hh = String(date.getHours()).padStart(2, "0");
+    const min = String(date.getMinutes()).padStart(2, "0");
+    return `${yyyy}.${mm}.${dd} / ${hh}:${min}`;
   };
 
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      setComments([...comments, { id: 'currentUser', text: newComment }]); // 댓글 작성자 아이디 추가
-      setNewComment('');
+  const fetchRandomPost = async () => {
+    try {
+      const res = await fetch("http://localhost:3010/feed/random");
+      const data = await res.json();
+      setPost(data.post);
+      setPostId(data.post.POST_ID);
+      setUserId(data.post.USER_ID);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRandomPost();
+  }, []);
+
+  //좋아요 여부 확인 
+  const checkLikeStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      const res = await fetch(`http://localhost:3010/feed/isLiked?userId=${userId}&postId=${postId}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        setLiked(data.isLiked); // DB에서 받아온 좋아요 상태 반영
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => { // 포스트가 바뀔때마다 좋아요 여부확인
+    if (postId) {
+      checkLikeStatus();
+    }
+  }, [postId]);
+
+  // 좋아요 버튼 클릭 시 호출할 함수
+  const handleLike = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("로그인 후 이용해주세요.");
+        return;
+      }
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      const res = await fetch("http://localhost:3010/feed/like", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId,
+          postId,
+          cancel: liked // liked가 true면 취소 요청
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setLiked(!liked); // 상태 토글
+        alert(liked ? "좋아요 취소 완료!" : "좋아요 완료!");
+      } else {
+        alert("좋아요 실패: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("오류 발생");
     }
   };
 
   return (
-    <Container maxWidth="md">
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6">SNS</Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Box mt={4}>
-        <Grid2 container spacing={3}>
-          {mockFeeds.map((feed) => (
-            <Grid2 xs={12} sm={6} md={4} key={feed.id}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={feed.image}
-                  alt={feed.title}
-                  onClick={() => handleClickOpen(feed)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="textSecondary">
-                    {feed.title}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid2>
-          ))}
-        </Grid2>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "80vh",
+        gap: 4,
+      }}
+    >
+      {/* 왼쪽 화살표 */}
+      <Box
+        sx={{
+          width: 90,
+          height: 90,
+          borderRadius: "50%", // 원 모양
+          overflow: "hidden",
+          boxShadow: "0px 5px 3px rgba(0, 0, 0, 0.81)",
+          cursor: "pointer",
+          marginRight: 5,
+          transition: "transform 0.2s ease", // 부드러운 애니메이션 추가
+          "&:hover": {
+            transform: "scale(1.06)", // 마우스 올리면 10% 확대
+          },
+          "&:active": {
+            transform: "scale(0.9)", // 클릭 시 10% 축소
+          },
+        }}
+        onClick={fetchRandomPost}
+      >
+        <Box
+          component="img"
+          src="/Left.png"
+          alt="왼쪽 화살표"
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+            objectFit: "cover",
+          }}
+        />
       </Box>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg"> {/* 모달 크기 조정 */}
-        <DialogTitle>
-          {selectedFeed?.title}
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={handleClose}
-            aria-label="close"
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ display: 'flex' }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body1">{selectedFeed?.description}</Typography>
-            {selectedFeed?.image && (
-              <img
-                src={selectedFeed.image}
-                alt={selectedFeed.title}
-                style={{ width: '100%', marginTop: '10px' }}
-              />
-            )}
+      {/* 카드 */}
+      <Card
+        sx={{
+          marginTop: 12,
+          width: 500,
+          height: 700,
+          borderRadius: 7,
+          padding: 3,
+          paddingLeft: 5,
+          paddingRight: 5,
+          border: "1px solid #000000",
+          boxShadow: "0px 5px 3px rgba(0, 0, 0, 0.81)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* 카드 상단: 앨범 아이콘 + 노래 제목/가수 + 날짜 */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              component="img"
+              src="/ummban.png"
+              alt="앨범 이미지"
+              sx={{
+                width: 50,
+                height: 50,
+                borderRadius: 2,
+                cursor: "pointer",
+                transition: "transform 0.5s ease", // 부드러운 회전
+                "&:hover": {
+                  transform: "rotate(360deg)", // 마우스 올리면 1회전
+                },
+              }}
+              onClick={() => {
+                if (post?.LASTFM_TRACK_ID) {
+                  window.open(post.LASTFM_TRACK_ID, "_blank");
+                }
+              }}
+            />
+            <Box>
+              <Typography fontWeight="bold" fontSize={20}>{post?.MUSIC_TITLE || "노래 제목"}</Typography>
+              <Typography fontWeight="bold" fontSize={14} >{post?.SINGER || "가수 이름"}</Typography>
+            </Box>
           </Box>
 
-          <Box sx={{ width: '300px', marginLeft: '20px' }}>
-            <Typography variant="h6">댓글</Typography>
-            <List>
-              {comments.map((comment, index) => (
-                <ListItem key={index}>
-                  <ListItemAvatar>
-                    <Avatar>{comment.id.charAt(0).toUpperCase()}</Avatar> {/* 아이디의 첫 글자를 아바타로 표시 */}
-                  </ListItemAvatar>
-                  <ListItemText primary={comment.text} secondary={comment.id} /> {/* 아이디 표시 */}
-                </ListItem>
-              ))}
-            </List>
-            <TextField
-              label="댓글을 입력하세요"
-              variant="outlined"
-              fullWidth
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}           
+        </Box>
+
+        {/* 카드 이미지 */}
+        <Box
+          sx={{
+            width: "100%",
+            aspectRatio: "1 / 1",
+            borderRadius: 2,
+            overflow: "hidden", // object-fit crop 위해
+            backgroundColor: "#f5f5f5",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+        >
+          {post?.IMAGE_URL && post.IMAGE_URL.toLowerCase().endsWith(".gif") ? (
+            <img
+              src={encodeURI(post.IMAGE_URL)}
+              alt={post.CONTENT || "feed image"}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block"
+              }}
             />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAddComment}
-              sx={{ marginTop: 1 }}
+          ) : (
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                backgroundImage: `url(${encodeURI(post?.IMAGE_URL)})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+          )}
+        </Box>
+
+
+        {/* 게시글 내용 */}
+        <Typography fontSize={12}>{formatDate(post?.CREATED_AT)}</Typography>
+        <Typography sx={{ mb: 2 }}>{post?.CONTENT}</Typography>
+
+        {/* 카드 하단 아이콘 */}
+
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          {/* 좋아요 이미지 */}
+          <button
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              outline: "none",
+            }}
+            onClick={handleLike}
+          >
+            <img
+              src={liked ? "/afterLike.png" : "/Good.png"}
+              alt="좋아요"
+              style={{
+                width: 55, // liked 이미지 조금 키움
+                height: "auto",
+                marginLeft: 10,
+                marginBottom: 2,
+                transition: "transform 0.2s ease", // 애니메이션
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+              onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.9)"} // 클릭
+              onMouseUp={(e) => e.currentTarget.style.transform = "scale(1.1)"}   // 클릭 후 복귀
+            />
+          </button>
+
+
+          <Box
+            sx={{
+              width: 87, // 외부 검정 테두리 포함
+              height: 87,
+              borderRadius: "50%",
+              backgroundColor: "black", // 외부 테두리
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+             transition: "transform 0.2s ease", // 애니메이션
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+              onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.9)"} // 클릭
+              onMouseUp={(e) => e.currentTarget.style.transform = "scale(1.1)"}   // 클릭 후 복귀
+          >
+            <IconButton
+              sx={{
+                width: 83,
+                height: 83,
+                borderRadius: "50%",
+                padding: "3px", // 투톤 테두리 두께
+                background: "linear-gradient(to top, #97E646, #ffffff)", // 투톤 테두리
+                overflow: "hidden",
+              }}
+              onClick={goToOtherUser}
             >
-              댓글 추가
-            </Button>
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "50%",
+                  backgroundColor: "#ffffff", // 내부 배경
+                  overflow: "hidden",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <img
+                  src={post?.PROFILE_IMG ? `http://localhost:3010${post.PROFILE_IMG}` : "/circle-icon.png"}
+                  alt="유저 프로필"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </Box>
+            </IconButton>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            닫기
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+
+
+          {/* 댓글 이미지 */}
+          <button style={{ background: "none", border: "none", cursor: "pointer" }}
+            onClick={goToFeedDetail}>
+            <img
+              src="/comment.png"
+              alt="댓글"
+              style={{
+                width: 65, height: "auto", marginRight: 10, transition: "transform 0.2s ease", // 애니메이션
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+              onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.9)"} // 클릭
+              onMouseUp={(e) => e.currentTarget.style.transform = "scale(1.1)"}   // 클릭 후 복귀
+            />
+          </button>
+        </div>
+
+      </Card>
+      {/* 오른쪽 화살표 */}
+      <Box
+        sx={{
+          width: 90,
+          height: 90,
+          borderRadius: "50%",
+          overflow: "hidden",
+          boxShadow: "0px 5px 3px rgba(0, 0, 0, 0.81)",
+          cursor: "pointer",
+          marginLeft: 5,
+          transition: "transform 0.2s ease", // 부드러운 애니메이션 추가
+          "&:hover": {
+            transform: "scale(1.)", // 마우스 올리면 10% 확대
+          },
+          "&:active": {
+            transform: "scale(0.9)", // 클릭 시 10% 축소
+          },
+        }}
+        onClick={fetchRandomPost}
+      >
+        <Box
+          component="img"
+          src="/Right.png"
+          alt="오른쪽 화살표"
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+            objectFit: "cover",
+          }}
+        />
+      </Box>
+    </Box>
   );
 }
-
-export default Feed;
