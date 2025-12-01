@@ -98,7 +98,8 @@ function Register() {
                 sx={{
                     backgroundColor: '#fff',
                     borderRadius: 4,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    border: "1px solid #000000",
+                    boxShadow: "0px 5px 3px rgba(0, 0, 0, 0.81)",
                     padding: 3,
                     marginBottom: 10,
                     mt: 5,
@@ -154,12 +155,14 @@ function Register() {
                         onClick={handleSearch}
                         variant="contained"
                         sx={{
-                            backgroundColor: '#000',  // 검정 배경
-                            color: '#fff',            // 글씨 흰색
+                            color: '#000',
+                            border: '2px solid #000',
+                            borderRadius: '50px',
+                            background: "linear-gradient(to bottom, #ffffff 0%, #97E646 100%)",
                             '&:hover': {
-                                backgroundColor: '#333', // 마우스 오버 시 조금 밝게
+                                background: "linear-gradient(to bottom, #ffffff 0%, #b6f264 100%)",
+                                boxShadow: 'none'
                             },
-                            textTransform: 'none',     // 글씨 대문자 변환 제거
                         }}
                     >검색</Button>
                 </Box>
@@ -216,7 +219,7 @@ function Register() {
                     padding: '12px 0',
                     '&:hover': {
                         background: "linear-gradient(to bottom, #ffffff 0%, #b6f264 100%)",
-                        boxShadow: 'none',
+                        boxShadow: 'none'
                     },
                 }}>
                     등록하기

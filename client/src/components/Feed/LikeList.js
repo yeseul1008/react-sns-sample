@@ -162,7 +162,7 @@ function LikeList() {
                     </Box>
 
                     {/* 페이지네이션 버튼 */}
-                    <Box sx={{ display: 'flex', gap: 2, mt: 2, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 2, mt: 0.5, alignItems: 'center' }}>
                         {/* 이전 */}
                         <Box
                             sx={{

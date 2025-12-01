@@ -19,7 +19,7 @@ export default function FloatingMenu() {
     <Box
       sx={{
         position: "fixed",
-        top: "100px",
+        top: "120px",
         left: "80px",
         display: "flex",
         flexDirection: "column",

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
 import Login from './components/Login';
@@ -8,6 +8,7 @@ import FindPwd from './components/FindPwd';
 import Feed from './components/Feed';
 import FeedDetail from './components/FeedDetail';
 import EditPost from './components/EditPost';
+import ChatPopup from './components/ChatPopup';
 
 import Search from './components/Search';
 
@@ -23,6 +24,7 @@ import SearchList from './components/Feed/SearchList';
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
 import Alert from "./components/Header/Alert";
+import AlertChat from "./components/Header/AlertChat";
 
 import './App.css';
 
@@ -33,6 +35,31 @@ function App() {
     || location.pathname === '/login'
     || location.pathname === '/findId'
     || location.pathname === '/findPwd';
+
+  // 채팅 관련 상태
+  const [chatList, setChatList] = useState([]); // 현재 열려있는 채팅방 목록 [{userId, nickname, chatRoomId}]
+
+  // 채팅방 열기
+  const openChat = (userId, nickname, chatRoomId) => {
+    if (!chatList.some(chat => chat.userId === userId)) {
+      setChatList(prev => [...prev, { userId, nickname, chatRoomId }]);
+    }
+  };
+
+  // 채팅방 닫기
+  const closeChat = (userId) => {
+    setChatList(prev => prev.filter(chat => chat.userId !== userId));
+  };
+
+  // window 이벤트로 채팅 열기
+  useEffect(() => {
+    const handler = (e) => {
+      const { userId, nickname, chatRoomId } = e.detail;
+      openChat(userId, nickname, chatRoomId);
+    };
+    window.addEventListener('openChat', handler);
+    return () => window.removeEventListener('openChat', handler);
+  }, []);
 
   return (
     <div
@@ -49,12 +76,12 @@ function App() {
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <CssBaseline />
 
-        {/* Sidebar는 기존처럼 */}
+        {/* Sidebar와 Alert */}
         {!isAuthPage && <Sidebar />}
         {!isAuthPage && <Alert />}
+        {!isAuthPage && <AlertChat />}
 
         <Box component="main" sx={{ flexGrow: 1, p: 0 }}>
-          {/* Header도 항상 보이되, AuthPage에서는 숨김 */}
           {!isAuthPage && <Header />}
 
           <Routes>
@@ -78,6 +105,17 @@ function App() {
           </Routes>
         </Box>
       </Box>
+
+      {/* 최상단 고정 채팅 팝업 렌더 */}
+      {chatList.map(chat => (
+        <ChatPopup
+          key={chat.userId}
+          chatRoomId={chat.chatRoomId}  // ✅ chatRoomId 전달
+          otherUserId={chat.userId}
+          otherUserNickname={chat.nickname}
+          onClose={() => closeChat(chat.userId)}
+        />
+      ))}
     </div>
   );
 }

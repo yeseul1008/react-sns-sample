@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Box, Avatar, Grid, Paper, ImageList, ImageListItem, Button } from '@mui/material';
+import { Container, Typography, Box, Avatar, Grid, Paper, ImageList, ImageListItem, Button, IconButton } from '@mui/material';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import { jwtDecode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function OtherUser() {
     const location = useLocation();
     const [user, setUser] = useState();
-    const { userId } = location.state || {}; // MusicCard에서 보낸 userId
+    const { userId } = location.state || {};
     const [feedList, setFeedList] = useState([]);
-    const [isFollowing, setIsFollowing] = useState(false); // 팔로우 상태
+    const [isFollowing, setIsFollowing] = useState(false);
     const navigate = useNavigate();
 
-    // 로그인한 유저 ID
     const token = localStorage.getItem("token");
     const loggedInUserId = token ? jwtDecode(token).userId : null;
 
@@ -52,7 +52,6 @@ function OtherUser() {
             .then(data => setFeedList(data.list));
     }
 
-    // 팔로우 여부 체크
     function fnfollowCheck() {
         const token = localStorage.getItem("token");
         const decoded = jwtDecode(token);
@@ -70,12 +69,10 @@ function OtherUser() {
         })
             .then(res => res.json())
             .then(data => {
-                // console.log("팔로우상태==>", data.isFollow);
                 setIsFollowing(data.isFollow);
             })
     }
 
-    // 팔로우/팔로잉수 확인
     function fnfollowCount() {
         let param = {
             userId: userId
@@ -91,11 +88,10 @@ function OtherUser() {
             .then(res => res.json())
             .then(data => {
                 setUser(prev => ({
-                    ...prev,                     // 기존 user 정보 유지
-                    following: data.following_cnt, // 팔로잉 수 업데이트
-                    followers: data.follower_cnt   // 팔로워 수 업데이트
+                    ...prev,
+                    following: data.following_cnt,
+                    followers: data.follower_cnt
                 }));
-                console.log(user);
             })
     }
 
@@ -109,13 +105,96 @@ function OtherUser() {
     return (
         <Container maxWidth="md">
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="flex-start" minHeight="100vh" sx={{ padding: '20px', marginTop: 3 }}>
-                <Paper elevation={3} sx={{ padding: '20px', borderRadius: '15px', width: '100%', border: "1px solid #000000", boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.81)" }}>
+
+                <Paper
+                    elevation={3}
+                    sx={{
+                        padding: '20px',
+                        borderRadius: '15px',
+                        width: '100%',
+                        border: "1px solid #000000",
+                        boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.81)",
+                        position: "relative"   // ⭐ 채팅 아이콘 배치 위해 추가
+                    }}
+                >
+
+                    {/* ⭐ 오른쪽 상단 채팅 버튼 */}
+                    {userId !== loggedInUserId && (
+                        <IconButton
+                            sx={{
+                                position: "absolute",
+                                top: 20,
+                                right: 20,
+                                backgroundColor: "#ffffff",
+                                border: "2px solid #000",
+                                "&:hover": { backgroundColor: "#f2f2f2" }
+                            }}
+                            onClick={async () => {
+                                try {
+                                    const token = localStorage.getItem("token");
+                                    const decoded = jwtDecode(token);
+
+                                    const param = {
+                                        userId: decoded.userId,
+                                        followUserId: userId
+                                    };
+
+                                    // 채팅방 존재 여부 확인
+                                    const res = await fetch("http://localhost:3010/chat/chatRoomCheck", {
+                                        method: "POST",
+                                        headers: { "Content-type": "application/json" },
+                                        body: JSON.stringify(param)
+                                    });
+                                    const data = await res.json();
+
+                                    let chatRoomId;
+
+                                    if (!data.exists) {
+                                        // 채팅방 없으면 생성
+                                        const createRes = await fetch("http://localhost:3010/chat/creatChatRoom", {
+                                            method: "POST",
+                                            headers: { "Content-type": "application/json" },
+                                            body: JSON.stringify({
+                                                senderId: decoded.userId,
+                                                receiverId: userId
+                                            })
+                                        });
+                                        const createData = await createRes.json();
+
+                                        // 안전하게 chatRoomId 가져오기
+                                        if (createData?.chatRoomId) {
+                                            chatRoomId = createData.chatRoomId;
+                                        } else if (createData?.result?.insertId) {
+                                            chatRoomId = createData.result.insertId;
+                                        } else {
+                                            throw new Error("채팅방 생성 실패: chatRoomId를 받지 못함");
+                                        }
+                                    } else {
+                                        chatRoomId = data.chatRoomId;
+                                    }
+
+                                    console.log("생성 혹은 기존 채팅방아이디==>", chatRoomId);
+
+                                    // 채팅 팝업 열기 이벤트
+                                    window.dispatchEvent(new CustomEvent('openChat', {
+                                        detail: { chatRoomId, otherUserId: userId, nickname: user?.NICKNAME }
+                                    }));
+
+                                } catch (err) {
+                                    console.error(err);
+                                    alert("채팅방을 열 수 없습니다.");
+                                }
+                            }}
+                        >
+                            <ChatBubbleIcon sx={{ color: "#000" }} />
+                        </IconButton>
+                    )}
 
                     {/* 프로필 정보 */}
                     <Box display="flex" flexDirection="column" alignItems="center" sx={{ marginBottom: 3 }}>
                         <Box
                             sx={{
-                                width: 108, // 바깥 검정 테두리
+                                width: 108,
                                 height: 108,
                                 borderRadius: "50%",
                                 backgroundColor: "black",
@@ -127,14 +206,14 @@ function OtherUser() {
                         >
                             <Box
                                 sx={{
-                                    width: 104,   // 안쪽 초록 테두리
+                                    width: 104,
                                     height: 104,
                                     borderRadius: "50%",
                                     background: "linear-gradient(to top, #97E646, #ffffff)",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
-                                    padding: "5px", // 사진과 테두리 사이 여백
+                                    padding: "5px",
                                 }}
                             >
                                 <Box
@@ -157,7 +236,6 @@ function OtherUser() {
                         <Typography variant="h5">{user?.NICKNAME}</Typography>
                         <Typography variant="body2" color="text.secondary">@{user?.USER_ID}</Typography>
 
-                        {/* 팔로우 버튼 (본인 계정이면 안보임) */}
                         {userId !== loggedInUserId && (
                             <Button
                                 variant={isFollowing ? "outlined" : "contained"}
@@ -171,8 +249,6 @@ function OtherUser() {
                                     fontSize: '18px',
                                     fontWeight: 600,
                                     padding: '6px 0',
-
-                                    // ===== 팔로잉 중일 때 (배경 흰색) =====
                                     ...(isFollowing
                                         ? {
                                             backgroundColor: "#ffffff",
@@ -184,7 +260,6 @@ function OtherUser() {
                                             }
                                         }
                                         :
-                                        // ===== 팔로잉이 아닐 때 (원래 CSS 그대로) =====
                                         {
                                             backgroundColor: 'transparent',
                                             border: '2px solid #000',
@@ -204,15 +279,14 @@ function OtherUser() {
                                     ),
                                 }}
                                 onClick={() => {
-                                    if (!isFollowing) { // 팔로잉 되있지 않은 경우 (인서트)
-                                        const token = localStorage.getItem("token");
-                                        const decoded = jwtDecode(token);
-                                        let param = {
-                                            userId: decoded.userId,
-                                            followUserId: userId
-                                        };
-                                        console.log(param);
+                                    const token = localStorage.getItem("token");
+                                    const decoded = jwtDecode(token);
+                                    let param = {
+                                        userId: decoded.userId,
+                                        followUserId: userId
+                                    };
 
+                                    if (!isFollowing) {
                                         fetch("http://localhost:3010/feed/follow", {
                                             method: "POST",
                                             headers: {
@@ -222,20 +296,11 @@ function OtherUser() {
                                         })
                                             .then(res => res.json())
                                             .then(data => {
-                                                console.log(data);
                                                 alert(data.msg);
                                                 setIsFollowing(true);
                                                 fnfollowCount();
                                             })
-                                    } else { // 팔로잉 되있는 경우 (딜리트)
-                                        const token = localStorage.getItem("token");
-                                        const decoded = jwtDecode(token);
-                                        let param = {
-                                            userId: decoded.userId,
-                                            followUserId: userId
-                                        };
-                                        console.log(param);
-
+                                    } else {
                                         fetch("http://localhost:3010/feed/followDelete", {
                                             method: "POST",
                                             headers: {
@@ -245,7 +310,6 @@ function OtherUser() {
                                         })
                                             .then(res => res.json())
                                             .then(data => {
-                                                console.log(data);
                                                 alert(data.msg);
                                                 setIsFollowing(false);
                                                 fnfollowCount();
@@ -273,7 +337,6 @@ function OtherUser() {
                         </Grid>
                     </Grid>
 
-                    {/* 게시글 이미지 */}
                     <Box sx={{ marginTop: 4 }}>
                         <Typography variant="h6" sx={{ marginBottom: 2 }}>내 게시글</Typography>
                         <ImageList variant="standard" cols={3} gap={8}>
@@ -286,9 +349,9 @@ function OtherUser() {
                                         borderRadius: '8px',
                                         overflow: 'hidden',
                                         cursor: 'pointer',
-                                        transition: 'border 0.2s ease-in-out', // 부드럽게
+                                        transition: 'border 0.2s ease-in-out',
                                         '&:hover': {
-                                            border: '2px solid #97E646', // 원하는 색상
+                                            border: '2px solid #97E646',
                                         }
                                     }}
                                 >

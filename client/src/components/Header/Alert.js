@@ -53,27 +53,32 @@ function Alert() {
       <Badge
         badgeContent={comments.filter(c => c.IS_READ === 'N').length}
         color="error"
+        overlap="circular" // 원형 버튼에 맞게 배지 위치 조정
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Button
-          variant="contained"
-          color="primary"
+        <Box
           onClick={handleToggle}
           sx={{
+            width: 60,   // 정사각형
+            height: 60,  // 정사각형
             borderRadius: "50%",
-            minWidth: 60,
-            minHeight: 60,
-            border: "2px solid #000000",
-            boxShadow: "0px 5px 10px rgba(0,0,0,0.3)",
+            border: "2px solid #000",
             background: "linear-gradient(to bottom, #ffffff 0%, #97E646 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0px 5px 10px rgba(0,0,0,0.3)",
             "&:hover": {
               background: "linear-gradient(to bottom, #ffffff 0%, #b6f264 100%)",
             },
           }}
         >
           <NotificationsIcon sx={{ fontSize: 30, color: "#000" }} />
-        </Button>
+        </Box>
       </Badge>
     </Box>
+
 
     {/* 백드롭 */}
     {open && (
@@ -163,7 +168,7 @@ function Alert() {
                 component="img"
                 src={comment.PROFILE_IMG ? `http://localhost:3010${comment.PROFILE_IMG}` : "/기본이미지.jpg"}
                 alt="댓글 프로필"
-                sx={{ width: 40, height: 40, borderRadius: "50%" }}
+                sx={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", }}
               />
               {/* 댓글 내용 */}
               <Box sx={{ display: "flex", flexDirection: "column" }}>

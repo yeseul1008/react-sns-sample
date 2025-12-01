@@ -4,6 +4,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 const userRouter = require("./routes/user");
+const chatRouter = require("./routes/chat");
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/user", userRouter);
 app.use("/feed", require("./routes/feed"));
+app.use("/chat", chatRouter);
 
 
 // Last.fm 전체 검색 API

@@ -4,13 +4,17 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 function Feed() {
-  const [posts, setPosts] = useState([]); // 랜덤으로 배치된 게시글 배열
+  const [posts, setPosts] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [postId, setPostId] = useState(null); // 현재 포스트 아이디 저장
-  const [otheruserId, setUserId] = useState(null); // 현재 포스트 유저 아이디 저장
-  const [liked, setLiked] = useState(false); // 좋아요 여부
-  const navigate = useNavigate();
+  const [postId, setPostId] = useState(null);
+  const [otheruserId, setUserId] = useState(null);
+  const [liked, setLiked] = useState(false);
 
+  // 애니메이션 상태
+  const [direction, setDirection] = useState("next");
+  const [animate, setAnimate] = useState(false);
+
+  const navigate = useNavigate();
   const currentPost = posts[currentIndex];
 
   const goToFeedDetail = () => {
@@ -32,21 +36,39 @@ function Feed() {
     return `${yyyy}.${mm}.${dd} / ${hh}:${min}`;
   };
 
-// 오른쪽 버튼 클릭
-const handleNext = () => {
-  setCurrentIndex((prev) => (prev < posts.length - 1 ? prev + 1 : 0));
-};
+  // 오른쪽 버튼 클릭
+  const handleNext = () => {
+    if (animate) return; // 중복 클릭 방지
 
-// 왼쪽 버튼 클릭
-const handlePrev = () => {
-  setCurrentIndex((prev) => (prev > 0 ? prev - 1 : posts.length - 1));
-};
+    setDirection("next");
+    setAnimate(true);
+
+    setTimeout(() => {
+      setCurrentIndex((prev) =>
+        prev < posts.length - 1 ? prev + 1 : 0
+      );
+    }, 450); // 애니메이션 끝난 후 카드 변경
+  };
+
+  // 왼쪽 버튼 클릭
+  const handlePrev = () => {
+    if (animate) return; // 중복 클릭 방지
+
+    setDirection("prev");
+    setAnimate(true);
+
+    setTimeout(() => {
+      setCurrentIndex((prev) =>
+        prev > 0 ? prev - 1 : posts.length - 1
+      );
+    }, 450); // 애니메이션 후에 변경
+  };
 
 
   // 전체 랜덤 게시글 가져오기
   const fetchRandomPosts = async () => {
     try {
-      const res = await fetch("http://localhost:3010/feed/randomAll"); // 백엔드에서 전체 랜덤 게시글 배열 반환
+      const res = await fetch("http://localhost:3010/feed/randomAll");
       const data = await res.json();
       setPosts(data.posts);
       setCurrentIndex(0);
@@ -59,7 +81,6 @@ const handlePrev = () => {
     fetchRandomPosts();
   }, []);
 
-  // 현재 포스트가 바뀔 때 postId, userId 업데이트
   useEffect(() => {
     if (currentPost) {
       setPostId(currentPost.POST_ID);
@@ -134,6 +155,14 @@ const handlePrev = () => {
     }
   };
 
+  useEffect(() => {
+    if (animate) {
+      const t = setTimeout(() => setAnimate(false), 450);
+      return () => clearTimeout(t);
+    }
+  }, [animate]);
+
+
   return (
     <Box
       sx={{
@@ -168,130 +197,145 @@ const handlePrev = () => {
         />
       </Box>
 
-      {/* 카드 */}
-      <Card
+      {/* ✨ 카드 슬라이드 애니메이션 래퍼 */}
+      <Box
         sx={{
-          marginTop: 12,
-          width: 500,
-          height: 700,
-          borderRadius: 7,
-          padding: 3,
-          paddingLeft: 5,
-          paddingRight: 5,
-          border: "1px solid #000000",
-          boxShadow: "0px 5px 3px rgba(0, 0, 0, 0.81)",
+          transition: "transform 0.45s ease, opacity 0.45s ease",
+          transform: animate
+            ? direction === "next"
+              ? "translateX(80px)"
+              : "translateX(-80px)"
+            : "translateX(0)",
+          opacity: animate ? 0 : 1,
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
-        {/* 카드 상단 */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box
-              component="img"
-              src="/ummban.png"
-              alt="앨범 이미지"
-              sx={{
-                width: 50,
-                height: 50,
-                borderRadius: 2,
-                cursor: "pointer",
-                transition: "transform 0.5s ease",
-                "&:hover": { transform: "rotate(360deg)" },
-              }}
-              onClick={() => {
-                if (currentPost?.LASTFM_TRACK_ID) {
-                  window.open(currentPost.LASTFM_TRACK_ID, "_blank");
-                }
-              }}
-            />
-            <Box>
-              <Typography fontWeight="bold" fontSize={20}>
-                {currentPost?.MUSIC_TITLE || "노래 제목"}
-              </Typography>
-              <Typography fontWeight="bold" fontSize={14}>
-                {currentPost?.SINGER || "가수 이름"}
-              </Typography>
+        {/* 카드 */}
+        <Card
+          sx={{
+            marginTop: 12,
+            width: 500,
+            height: 700,
+            borderRadius: 7,
+            padding: 3,
+            paddingLeft: 5,
+            paddingRight: 5,
+            border: "1px solid #000000",
+            boxShadow: "0px 5px 3px rgba(0, 0, 0, 0.81)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* 카드 상단 */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                component="img"
+                src="/ummban.png"
+                alt="앨범 이미지"
+                sx={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  transition: "transform 0.5s ease",
+                  "&:hover": { transform: "rotate(360deg)" },
+                }}
+                onClick={() => {
+                  if (currentPost?.LASTFM_TRACK_ID) {
+                    window.open(currentPost.LASTFM_TRACK_ID, "_blank");
+                  }
+                }}
+              />
+              <Box>
+                <Typography fontWeight="bold" fontSize={20}>
+                  {currentPost?.MUSIC_TITLE || "노래 제목"}
+                </Typography>
+                <Typography fontWeight="bold" fontSize={14}>
+                  {currentPost?.SINGER || "가수 이름"}
+                </Typography>
+              </Box>
             </Box>
           </Box>
-        </Box>
 
-        {/* 카드 이미지 */}
-        <Box
-          sx={{
-            width: "100%",
-            aspectRatio: "1 / 1",
-            borderRadius: 2,
-            overflow: "hidden",
-            backgroundColor: "#f5f5f5",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {currentPost?.IMAGE_URL &&
-          currentPost.IMAGE_URL.toLowerCase().endsWith(".gif") ? (
-            <img
-              src={encodeURI(currentPost.IMAGE_URL)}
-              alt={currentPost.CONTENT || "feed image"}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
-          ) : (
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
-                backgroundImage: `url(${encodeURI(currentPost?.IMAGE_URL)})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-          )}
-        </Box>
-
-        {/* 게시글 내용 */}
-        <Typography fontSize={12}>{formatDate(currentPost?.CREATED_AT)}</Typography>
-        <Typography
-          fontSize={13}
-          sx={{
-            mb: 2,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {currentPost?.CONTENT}
-        </Typography>
-
-        {/* 카드 하단 아이콘 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {/* 좋아요 */}
-          <button
-            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, outline: "none" }}
-            onClick={handleLike}
-          >
-            <img
-              src={liked ? "/afterLike.png" : "/Good.png"}
-              alt="좋아요"
-              style={{
-                width: 55,
-                height: "auto",
-                marginLeft: 10,
-                marginBottom: 2,
-                transition: "transform 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.9)")}
-              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-            />
-          </button>
-
-          {/* 프로필 */}
+          {/* 카드 이미지 */}
           <Box
+            sx={{
+              width: "100%",
+              aspectRatio: "1 / 1",
+              borderRadius: 2,
+              overflow: "hidden",
+              backgroundColor: "#f5f5f5",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {currentPost?.IMAGE_URL &&
+              currentPost.IMAGE_URL.toLowerCase().endsWith(".gif") ? (
+              <img
+                src={encodeURI(currentPost.IMAGE_URL)}
+                alt={currentPost.CONTENT || "feed image"}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  backgroundImage: `url(${encodeURI(currentPost?.IMAGE_URL)})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+            )}
+          </Box>
+
+          {/* 게시글 내용 */}
+          <Typography fontSize={12}>{formatDate(currentPost?.CREATED_AT)}</Typography>
+          <Typography
+            fontSize={13}
+            sx={{
+              mb: 2,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {currentPost?.CONTENT}
+          </Typography>
+
+          {/* 카드 하단 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* 좋아요 */}
+            <button
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              onClick={handleLike}
+            >
+              <img
+                src={liked ? "/afterLike.png" : "/Good.png"}
+                alt="좋아요"
+                style={{
+                  width: 55,
+                  height: "auto",
+                  marginLeft: 10,
+                  marginBottom: 2,
+                  transition: "transform 0.2s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.9)")}
+                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+              />
+            </button>
+
+            {/* 프로필 */}
+            <Box
             sx={{
               width: 87,
               height: 87,
@@ -339,23 +383,21 @@ const handlePrev = () => {
             </IconButton>
           </Box>
 
-          {/* 댓글 */}
-          <button
-            style={{ background: "none", border: "none", cursor: "pointer" }}
-            onClick={goToFeedDetail}
-          >
-            <img
-              src="/comment.png"
-              alt="댓글"
-              style={{ width: 65, height: "auto", marginRight: 10, transition: "transform 0.2s ease" }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.9)")}
-              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-            />
-          </button>
-        </div>
-      </Card>
+            {/* 댓글 */}
+            <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={goToFeedDetail}>
+              <img
+                src="/comment.png"
+                alt="댓글"
+                style={{ width: 65, height: "auto", marginRight: 10, transition: "transform 0.2s ease" }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.9)")}
+                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+              />
+            </button>
+          </div>
+        </Card>
+      </Box>
 
       {/* 오른쪽 화살표 */}
       <Box
@@ -383,4 +425,5 @@ const handlePrev = () => {
     </Box>
   );
 }
+
 export default Feed;

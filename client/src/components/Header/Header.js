@@ -67,7 +67,7 @@ export default function Header() {
             height: 50, // 로고 높이 조절
             cursor: "pointer",
           }}
-          onClick={() => navigate("/feed")} 
+          onClick={() => navigate("/feed")}
         />
 
 
@@ -75,38 +75,41 @@ export default function Header() {
         <Box sx={{ display: "flex", flex: 1, maxWidth: 500 }}>
           <TextField
             fullWidth
-
             size="small"
             variant="outlined"
             placeholder="Search songs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
             sx={{
               marginRight: 2,
               height: 45,
               width: 400,
               border: "1px solid #000000",
               background: "linear-gradient(to bottom, #ffffff 0%, #dfdfdfff 100%)",
-              borderRadius: "50px", // 전체 모서리 둥글게
+              borderRadius: "50px",
               "& .MuiOutlinedInput-root": {
                 borderRadius: "50px",
                 height: 45,
                 "& fieldset": {
-                  borderColor: "#000000", // 기본 테두리
+                  borderColor: "#000000",
                   borderWidth: "1px",
                 },
                 "&:hover fieldset": {
-                  borderColor: "#555555", // hover 시 테두리
+                  borderColor: "#555555",
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#888888", // focus 시 회색
+                  borderColor: "#888888",
                   borderWidth: "1px",
                 },
-              }
-
-            }
-            }
+              },
+            }}
           />
+
           {/* 원형 버튼 (아이콘 없어도 됨) */}
           < IconButton
             onClick={handleSearch}
