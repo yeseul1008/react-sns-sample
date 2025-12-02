@@ -13,7 +13,14 @@
 - 단순히 게시글을 올리는 것이 아니라, 오늘의 감정과 분위기에 맞는 음악 한 곡을 함께 기록함으로써 더 깊이 있는 나만의 스토리를 남길 수 있는 서비스입니다.
 ---
 ## 📅 개발기간
-#### 2025.11.24 ~ 2025.12.02(기획 구상2일, 제작 5일)
+#### 2025.11.24 ~ 2025.12.02(기획 2일, 제작 5일)
+
+## 📌 기획 배경
+음악 감상과 SNS 활동이 분리되어 있어, 사용자가 자신의 음악 취향을 공유하고 소통하는 과정이 번거로웠습니다.  
+사용자들이 좋아하는 음악을 다른 사람들과 쉽게 공유하고 발견하며 소통할 수 있는 공간이 필요했습니다.
+또한, 한 번에 많은 콘텐츠를 보여주는 기존 방식은 집중도가 낮고, 새로운 음악을 발견하기 어려웠습니다.  
+이에 따라, 한 장씩 카드 형태의 게시물을 랜덤으로 보여주어 사용자가 한 콘텐츠에 집중하면서 자연스럽게 음악을 탐색하고 공유할 수 있는 SNS 플랫폼을 기획하게 되었습니다.
+
 --- 
 ## 🛠 사용기술
 
@@ -23,3 +30,6 @@
 | **백엔드** | ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)|
 | **데이터베이스** | ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white) |
 | **기타 / 도구** |![Last.fm](https://img.shields.io/badge/last.fm-D51007?style=for-the-badge&logo=last.fm&logoColor=white) ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white) ![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)|
+---
+## ✨ 페이지별 주요 기능
+### 1. 로그인/회원가입
