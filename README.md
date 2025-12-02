@@ -44,10 +44,25 @@
 
 | 메인 | 상세보기 |
 |---------|---------|
-| <img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EB%A9%94%EC%9D%B81.JPG"/> | <img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EC%83%81%EC%84%B8%EB%B3%B4%EA%B8%B0.JPG" /> |
+| <img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EB%A9%94%EC%9D%B8%EC%95%8C%EB%9E%8C.JPG"/> | <img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EC%83%81%EC%84%B8%EB%B3%B4%EA%B8%B0.JPG" /> |
 - 좌측 사이드바 (메인, 좋아요목록, 친구목록, 나의 프로필, 설정)
-- 우측 새 댓글알람, 채팅방 알람 (버튼 위 알람 수 만큼 숫자 표시)
+- 우측 새 댓글 알림 버튼, 새 채팅 알림 버튼 (버튼 위 알람 수 만큼 숫자 표시)
 - 좋아요, 댓글 기능
-- 상단 음반 이모지 클릭시 음반 돌아가며 해당음악 정보 페이지로(Last.fm API) 이동
+- 화살표 클릭시 Slide & Fade Card Transition로 랜덤 피드 띄우기
+- 상단 음반 이모지 클릭시 음반 돌아가며 **해당음악 정보 페이지로(Last.fm API) 이동**
 - 프로필 이미지 클릭시 해당 유저 프로필페이지로 이동
+
+### 3. 댓글알람 / 채팅알람
+
+| 댓글알림창 | 채팅알림창 |
+|---------|---------|
+| <img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EB%8C%93%EA%B8%80.JPG"/> | <img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EB%8C%93%EA%B8%80%EC%95%8C%EB%A6%BC.JPG" /> |
+- 메인에서 우측 알림창 클릭시 슬라이드 인(Slide-in) 효과로 창 띄움
+- **안읽은 알림 / 읽은 알림 구분**
+
+### 4. 채팅방 
+<img src="https://github.com/yeseul1008/SongNs/blob/main/readmeIMG/%EC%B1%84%ED%8C%85.JPG"/>
+
+- **Persistent Component** 형태로 페이지 이동해도 계속 유지 
+- 채팅방 **동시 여러개 띄우기** 가능, 드래그 통해 **위치 이동** 
 
